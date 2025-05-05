@@ -29,6 +29,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include "l3gd20.h"
+#include "lsm303c.h"
+#include "stm32l476g_discovery.h"
+#include "stm32l476g_discovery_gyroscope.h"
+#include "stm32l476g_discovery_compass.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -38,12 +43,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define XL_CS_PIN GPIO_PIN_0
-#define XL_CS_PORT GPIOE
-#define GYRO_CS_PIN GPIO_PIN_7
-#define GYRO_CS_PORT GPIOD
-#define WHO_AM_I_REGISTER 0x0F
-#define WHO_AM_I_EXPECTED 0x41
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -70,40 +70,9 @@ int _write(int file, char *ptr, int len) {
     return len;
 }
 
-void Accel_Init(void) {
-    uint8_t regAddr = 0x20;
-    uint8_t value = 0x57;
-    HAL_GPIO_WritePin(XL_CS_PORT, XL_CS_PIN, GPIO_PIN_RESET);
-    HAL_SPI_Transmit(&hspi2, &regAddr, 1, 100);
-    HAL_SPI_Transmit(&hspi2, &value, 1, 100);
-    HAL_GPIO_WritePin(XL_CS_PORT, XL_CS_PIN, GPIO_PIN_SET);
-}
+  float dataGyro[3];
+  int16_t dataAcc[3];
 
-uint8_t readWhoAmI(void) {
-    uint8_t txData = WHO_AM_I_REGISTER | 0x80;
-    uint8_t rxData = 0;
-    printf("Akcelerometr: CS LOW\n");
-    HAL_GPIO_WritePin(XL_CS_PORT, XL_CS_PIN, GPIO_PIN_RESET);
-    HAL_Delay(10);
-    HAL_SPI_TransmitReceive(&hspi2, &txData, &rxData, 1, 100);
-    printf("Akcelerometr: Odebrano 0x%X\n", rxData);
-    HAL_GPIO_WritePin(XL_CS_PORT, XL_CS_PIN, GPIO_PIN_SET);
-    printf("Akcelerometr: CS HIGH\n");
-    return rxData;
-}
-
-uint8_t readGyroWhoAmI(void) {
-    uint8_t txData = WHO_AM_I_REGISTER | 0x80;
-    uint8_t rxData = 0;
-    printf("Żyroskop: CS LOW\n");
-    HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_RESET);
-    HAL_Delay(10);
-    HAL_SPI_TransmitReceive(&hspi2, &txData, &rxData, 1, 100);
-    printf("Żyroskop: Odebrano 0x%X\n", rxData);
-    HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
-    printf("Żyroskop: CS HIGH\n");
-    return rxData;
-}
 /* USER CODE END 0 */
 
 /**
@@ -140,16 +109,24 @@ int main(void)
   MX_TIM6_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
-  Accel_Init();
-      uint8_t sensor_id = readWhoAmI();
-      if (sensor_id == WHO_AM_I_EXPECTED) {
-          printf("Akcelerometr poprawnie podłączony! WHO_AM_I: 0x%X\n", sensor_id);
-      } else {
-          printf("Błąd! Otrzymano: 0x%X, spodziewano się: 0x%X\n", sensor_id, WHO_AM_I_EXPECTED);
-      }
 
-      uint8_t gyro_id = readGyroWhoAmI();
-      printf("Żyroskop WHO_AM_I: 0x%X (spodziewano się 0xD4)\n", gyro_id);
+  printf(" - - Start programu - - \n");
+
+  //gyro init
+  uint8_t idGyro = L3GD20_ReadID();
+  if(idGyro != I_AM_L3GD20){printf("ERR, gyro id: 0x%X\n",idGyro);}
+
+  uint8_t stanGyro = BSP_GYRO_Init();
+  if(stanGyro == GYRO_ERROR){printf("ERR gyro init\n");}
+
+
+  //acc init
+  uint8_t idAcc = LSM303C_AccReadID();
+  if(idAcc != LMS303C_ACC_ID){printf("ERR,acc id: 0x%X\n",idAcc);}
+
+  COMPASS_StatusTypeDef stanAcc = BSP_COMPASS_Init();
+  if(stanAcc == COMPASS_ERROR){printf("ERR acc init\n");}
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -159,6 +136,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  L3GD20_ReadXYZAngRate(dataGyro);
+	  printf("Gyroscope: X: %f,Y: %f,Z: %f\n",dataGyro[0],dataGyro[1],dataGyro[2]);
+	  LSM303C_AccReadXYZ(dataAcc);
+	  printf("Accelerometer: X: %d,Y: %d,Z: %d\n",dataAcc[0],dataAcc[1],dataAcc[2]);
+	  HAL_Delay(200);
   }
   /* USER CODE END 3 */
 }

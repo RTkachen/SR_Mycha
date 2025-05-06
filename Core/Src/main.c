@@ -29,6 +29,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include "usbd_hid.h"
 #include "l3gd20.h"
 #include "lsm303c.h"
 #include "stm32l476g_discovery.h"
@@ -65,6 +66,8 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+extern USBD_HandleTypeDef hUsbDeviceFS;
+
 int _write(int file, char *ptr, int len) {
     HAL_UART_Transmit(&huart2, (uint8_t*) ptr, len, 100);
     return len;
@@ -72,6 +75,66 @@ int _write(int file, char *ptr, int len) {
 
   float dataGyro[3];
   int16_t dataAcc[3];
+
+
+
+#define MOUSE_THRESHOLD   3000    // odchylenie aby wywołać ruch
+#define MOUSE_STEP_MIN    1       // minimalny krok w HID
+#define MOUSE_STEP_MAX    10      // opcjonalne ograniczenie skalowania
+
+  typedef struct
+  {
+	  uint8_t buttons;
+	  int8_t mouse_x;
+	  int8_t mouse_y;
+	  int8_t wheel;
+  } mouseHID;
+
+mouseHID mousehid = {0,0,0,0};
+
+void AccToMouse_Process(void)
+{
+    static int16_t baseX, baseY;
+    static uint8_t  calibrated = 0;
+    int16_t dx, dy;
+    int8_t  mx = 0, my = 0;
+
+
+    if (!calibrated) {
+        baseX = dataAcc[0];
+        baseY = dataAcc[1];
+        calibrated = 1;
+        return;
+    }
+
+    dx = dataAcc[0] - baseX;
+    dy = dataAcc[1] - baseY;
+
+    // X-axis
+    if (dx < -MOUSE_THRESHOLD) {
+        mx = (int8_t)(((-dx - MOUSE_THRESHOLD) / 1000) + MOUSE_STEP_MIN);
+        if (mx > MOUSE_STEP_MAX) mx = MOUSE_STEP_MAX;
+    } else if (dx > MOUSE_THRESHOLD) {
+        mx = -(int8_t)(((dx - MOUSE_THRESHOLD) / 1000) + MOUSE_STEP_MIN);
+        if (mx < -MOUSE_STEP_MAX) mx = -MOUSE_STEP_MAX;
+    }
+
+    // Y-axis
+    if (dy > MOUSE_THRESHOLD) {
+        my = -(int8_t)(((dy - MOUSE_THRESHOLD) / 1000) + MOUSE_STEP_MIN);
+        if (my < -MOUSE_STEP_MAX) my = -MOUSE_STEP_MAX;
+    } else if (dy < -MOUSE_THRESHOLD) {
+        my = (int8_t)(((-dy - MOUSE_THRESHOLD) / 1000) + MOUSE_STEP_MIN);
+        if (my > MOUSE_STEP_MAX) my = MOUSE_STEP_MAX;
+    }
+
+    mousehid.buttons = 0;
+    mousehid.mouse_x = mx;
+    mousehid.mouse_y = my;
+    mousehid.wheel = 0;
+    USBD_HID_SendReport(&hUsbDeviceFS, (uint8_t*)&mousehid, sizeof(mousehid));
+}
+
 
 /* USER CODE END 0 */
 
@@ -110,22 +173,22 @@ int main(void)
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
 
-  printf(" - - Start programu - - \n");
+  printf(" - - Start programu - - \r\n");
 
   //gyro init
-  uint8_t idGyro = L3GD20_ReadID();
-  if(idGyro != I_AM_L3GD20){printf("ERR, gyro id: 0x%X\n",idGyro);}
+  //uint8_t idGyro = L3GD20_ReadID();
+  //if(idGyro != I_AM_L3GD20){printf("ERR, gyro id: 0x%X\r\n",idGyro);}
 
-  uint8_t stanGyro = BSP_GYRO_Init();
-  if(stanGyro == GYRO_ERROR){printf("ERR gyro init\n");}
+  //uint8_t stanGyro = BSP_GYRO_Init();
+  //if(stanGyro == GYRO_ERROR){printf("ERR gyro init\r\n");}
 
 
   //acc init
   uint8_t idAcc = LSM303C_AccReadID();
-  if(idAcc != LMS303C_ACC_ID){printf("ERR,acc id: 0x%X\n",idAcc);}
+  if(idAcc != LMS303C_ACC_ID){printf("ERR, acc id: 0x%X\r\n",idAcc);}
 
   COMPASS_StatusTypeDef stanAcc = BSP_COMPASS_Init();
-  if(stanAcc == COMPASS_ERROR){printf("ERR acc init\n");}
+  if(stanAcc == COMPASS_ERROR){printf("ERR acc init\r\n");}
 
   /* USER CODE END 2 */
 
@@ -136,11 +199,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  L3GD20_ReadXYZAngRate(dataGyro);
-	  printf("Gyroscope: X: %f,Y: %f,Z: %f\n",dataGyro[0],dataGyro[1],dataGyro[2]);
+	 // L3GD20_ReadXYZAngRate(dataGyro);
+	 // printf("Gyroscope: X: %f,Y: %f,Z: %f\r\n",dataGyro[0],dataGyro[1],dataGyro[2]);
 	  LSM303C_AccReadXYZ(dataAcc);
-	  printf("Accelerometer: X: %d,Y: %d,Z: %d\n",dataAcc[0],dataAcc[1],dataAcc[2]);
-	  HAL_Delay(200);
+
+	  AccToMouse_Process();
+	  printf("Accelerometer: X: %d,Y: %d,Z: %d\r\n",dataAcc[0],dataAcc[1],dataAcc[2]);
+	  HAL_Delay(20);
   }
   /* USER CODE END 3 */
 }
@@ -155,10 +220,15 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
+  /** Configure LSE Drive Capability
+  */
+  HAL_PWR_EnableBkUpAccess();
+  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE|RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
   RCC_OscInitStruct.MSICalibrationValue = 0;
   RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
@@ -208,6 +278,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+  /** Enable MSI Auto calibration
+  */
+  HAL_RCCEx_EnableMSIPLLMode();
 }
 
 /* USER CODE BEGIN 4 */

@@ -75,9 +75,9 @@ int _write(int file, char *ptr, int len) {
 
   float dataGyro[3];
   int16_t dataAcc[3];
+  float filteredAcc[3] = {0}; // przefiltrowane X, Y, Z
 
-
-
+#define LPF_ALPHA 0.3f       // 0,1 usuwa szumy o częstotliwości wyższej od 0,88 Hz
 #define MOUSE_THRESHOLD   3000    // odchylenie aby wywołać ruch
 #define MOUSE_STEP_MIN    1       // minimalny krok w HID
 #define MOUSE_STEP_MAX    10      // opcjonalne ograniczenie skalowania
@@ -101,14 +101,14 @@ void AccToMouse_Process(void)
 
 
     if (!calibrated) {
-        baseX = dataAcc[0];
-        baseY = dataAcc[1];
+        baseX = filteredAcc[0];
+        baseY = filteredAcc[1];
         calibrated = 1;
         return;
     }
 
-    dx = dataAcc[0] - baseX;
-    dy = dataAcc[1] - baseY;
+    dx = filteredAcc[0] - baseX;
+    dy = filteredAcc[1] - baseY;
 
     // X-axis
     if (dx < -MOUSE_THRESHOLD) {
@@ -202,7 +202,9 @@ int main(void)
 	 // L3GD20_ReadXYZAngRate(dataGyro);
 	 // printf("Gyroscope: X: %f,Y: %f,Z: %f\r\n",dataGyro[0],dataGyro[1],dataGyro[2]);
 	  LSM303C_AccReadXYZ(dataAcc);
-
+	  for (int i = 0; i < 3; ++i) {
+	      filteredAcc[i] = LPF_ALPHA * dataAcc[i] + (1.0f - LPF_ALPHA) * filteredAcc[i];
+	  }
 	  AccToMouse_Process();
 	  printf("Accelerometer: X: %d,Y: %d,Z: %d\r\n",dataAcc[0],dataAcc[1],dataAcc[2]);
 	  HAL_Delay(20);

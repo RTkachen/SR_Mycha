@@ -1,0 +1,5 @@
+../Core/Src/lsm303c_acc.c:10:26:LSM303C_SPI_ReadReg	2
+../Core/Src/lsm303c_acc.c:32:26:LSM303C_SPI_WriteReg	2
+../Core/Src/lsm303c_acc.c:48:9:LSM303C_AccReadIDT	2
+../Core/Src/lsm303c_acc.c:58:23:BSP_COMPASS_InitT	3
+../Core/Src/lsm303c_acc.c:74:23:LSM303C_AccReadXYZT	7

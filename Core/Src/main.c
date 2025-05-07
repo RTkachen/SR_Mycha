@@ -73,22 +73,25 @@ int _write(int file, char *ptr, int len) {
     return len;
 }
 
-  float dataGyro[3];
-  int16_t dataAcc[3];
-  float filteredAcc[3] = {0}; // przefiltrowane X, Y, Z
+float dataGyro[3];
+float dataGyroPrev[3] = {0};
+int16_t dataAcc[3];
+float filteredAcc[3] = {0}; // przefiltrowane X, Y, Z
+float filteredGyro[3] = {0};
 
 #define LPF_ALPHA 0.3f       // 0,1 usuwa szumy o częstotliwości wyższej od 0,88 Hz
+#define HPF_ALPHA 0.9f
 #define MOUSE_THRESHOLD   3000    // odchylenie aby wywołać ruch
 #define MOUSE_STEP_MIN    1       // minimalny krok w HID
 #define MOUSE_STEP_MAX    10      // opcjonalne ograniczenie skalowania
 
-  typedef struct
-  {
-	  uint8_t buttons;
-	  int8_t mouse_x;
-	  int8_t mouse_y;
-	  int8_t wheel;
-  } mouseHID;
+typedef struct
+{
+	uint8_t buttons;
+	int8_t mouse_x;
+	int8_t mouse_y;
+	int8_t wheel;
+} mouseHID;
 
 mouseHID mousehid = {0,0,0,0};
 
@@ -176,11 +179,11 @@ int main(void)
   printf(" - - Start programu - - \r\n");
 
   //gyro init
-  //uint8_t idGyro = L3GD20_ReadID();
-  //if(idGyro != I_AM_L3GD20){printf("ERR, gyro id: 0x%X\r\n",idGyro);}
+  uint8_t idGyro = L3GD20_ReadID();
+  if(idGyro != I_AM_L3GD20){printf("ERR, gyro id: 0x%X\r\n",idGyro);}
 
-  //uint8_t stanGyro = BSP_GYRO_Init();
-  //if(stanGyro == GYRO_ERROR){printf("ERR gyro init\r\n");}
+  uint8_t stanGyro = BSP_GYRO_Init();
+  if(stanGyro == GYRO_ERROR){printf("ERR gyro init\r\n");}
 
 
   //acc init
@@ -199,14 +202,18 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	 // L3GD20_ReadXYZAngRate(dataGyro);
-	 // printf("Gyroscope: X: %f,Y: %f,Z: %f\r\n",dataGyro[0],dataGyro[1],dataGyro[2]);
+	  L3GD20_ReadXYZAngRate(dataGyro);
+	  for (int i = 0; i < 3; ++i) {
+	  	  filteredGyro[i] = HPF_ALPHA * (filteredGyro[i] + dataGyro[i] - dataGyroPrev[i]);
+	  	  dataGyroPrev[i] = dataGyro[i];
+	  }
+	  printf("Gyroscope: X: %f,Y: %f,Z: %f\r\n",filteredGyro[0],filteredGyro[1],filteredGyro[2]);
 	  LSM303C_AccReadXYZ(dataAcc);
 	  for (int i = 0; i < 3; ++i) {
 	      filteredAcc[i] = LPF_ALPHA * dataAcc[i] + (1.0f - LPF_ALPHA) * filteredAcc[i];
 	  }
 	  AccToMouse_Process();
-	  printf("Accelerometer: X: %d,Y: %d,Z: %d\r\n",dataAcc[0],dataAcc[1],dataAcc[2]);
+	  printf("Accelerometer: X: %f,Y: %f,Z: %f\r\n",filteredAcc[0],filteredAcc[1],filteredAcc[2]);
 	  HAL_Delay(20);
   }
   /* USER CODE END 3 */

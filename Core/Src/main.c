@@ -29,13 +29,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
-<<<<<<< Updated upstream
-=======
 
 #include "accelerometer.h"
 #include "gyroscope.h"
 #include "usbhid.h"
->>>>>>> Stashed changes
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,12 +42,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define XL_CS_PIN GPIO_PIN_0
-#define XL_CS_PORT GPIOE
-#define GYRO_CS_PIN GPIO_PIN_7
-#define GYRO_CS_PORT GPIOD
-#define WHO_AM_I_REGISTER 0x0F
-#define WHO_AM_I_EXPECTED 0x41
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -72,59 +64,17 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
 int _write(int file, char *ptr, int len) {
     HAL_UART_Transmit(&huart2, (uint8_t*) ptr, len, 100);
     return len;
 }
 
-<<<<<<< Updated upstream
-void Accel_Init(void) {
-    uint8_t regAddr = 0x20;
-    uint8_t value = 0x57;
-    HAL_GPIO_WritePin(XL_CS_PORT, XL_CS_PIN, GPIO_PIN_RESET);
-    HAL_SPI_Transmit(&hspi2, &regAddr, 1, 100);
-    HAL_SPI_Transmit(&hspi2, &value, 1, 100);
-    HAL_GPIO_WritePin(XL_CS_PORT, XL_CS_PIN, GPIO_PIN_SET);
-}
-
-uint8_t readWhoAmI(void) {
-    uint8_t txData = WHO_AM_I_REGISTER | 0x80;
-    uint8_t rxData = 0;
-    printf("Akcelerometr: CS LOW\n");
-    HAL_GPIO_WritePin(XL_CS_PORT, XL_CS_PIN, GPIO_PIN_RESET);
-    HAL_Delay(10);
-    HAL_SPI_TransmitReceive(&hspi2, &txData, &rxData, 1, 100);
-    printf("Akcelerometr: Odebrano 0x%X\n", rxData);
-    HAL_GPIO_WritePin(XL_CS_PORT, XL_CS_PIN, GPIO_PIN_SET);
-    printf("Akcelerometr: CS HIGH\n");
-    return rxData;
-}
-
-uint8_t readGyroWhoAmI(void) {
-    uint8_t txData = WHO_AM_I_REGISTER | 0x80;
-    uint8_t rxData = 0;
-    printf("Żyroskop: CS LOW\n");
-    HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_RESET);
-    HAL_Delay(10);
-    HAL_SPI_TransmitReceive(&hspi2, &txData, &rxData, 1, 100);
-    printf("Żyroskop: Odebrano 0x%X\n", rxData);
-    HAL_GPIO_WritePin(GYRO_CS_PORT, GYRO_CS_PIN, GPIO_PIN_SET);
-    printf("Żyroskop: CS HIGH\n");
-    return rxData;
-}
-=======
-//float dataGyro[3];
 float filteredGyro[3] = {0};
-int16_t dataAcc[3];
 float filteredAcc[3] = {0}; // przefiltrowane X, Y, Z
 
 mouseHID mousehid = {0,0,0,0};
 
->>>>>>> Stashed changes
 /* USER CODE END 0 */
 
 /**
@@ -161,24 +111,12 @@ int main(void)
   MX_TIM6_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
-  Accel_Init();
-      uint8_t sensor_id = readWhoAmI();
-      if (sensor_id == WHO_AM_I_EXPECTED) {
-          printf("Akcelerometr poprawnie podłączony! WHO_AM_I: 0x%X\n", sensor_id);
-      } else {
-          printf("Błąd! Otrzymano: 0x%X, spodziewano się: 0x%X\n", sensor_id, WHO_AM_I_EXPECTED);
-      }
 
-<<<<<<< Updated upstream
-      uint8_t gyro_id = readGyroWhoAmI();
-      printf("Żyroskop WHO_AM_I: 0x%X (spodziewano się 0xD4)\n", gyro_id);
-=======
   printf(" - - Start programu - - \r\n");
 
   if(!gyroInit()){Error_Handler();}
   if(!accInit()){Error_Handler();}
 
->>>>>>> Stashed changes
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -188,15 +126,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-<<<<<<< Updated upstream
-=======
 	  gyroGetData(filteredGyro);
 	  accGetData(filteredAcc);
 	  AccToMouse_Process(mousehid,filteredAcc);
 
 	  HAL_Delay(20);
 
->>>>>>> Stashed changes
   }
   /* USER CODE END 3 */
 }

@@ -29,6 +29,13 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+<<<<<<< Updated upstream
+=======
+
+#include "accelerometer.h"
+#include "gyroscope.h"
+#include "usbhid.h"
+>>>>>>> Stashed changes
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -65,11 +72,16 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 int _write(int file, char *ptr, int len) {
     HAL_UART_Transmit(&huart2, (uint8_t*) ptr, len, 100);
     return len;
 }
 
+<<<<<<< Updated upstream
 void Accel_Init(void) {
     uint8_t regAddr = 0x20;
     uint8_t value = 0x57;
@@ -104,6 +116,15 @@ uint8_t readGyroWhoAmI(void) {
     printf("Żyroskop: CS HIGH\n");
     return rxData;
 }
+=======
+//float dataGyro[3];
+float filteredGyro[3] = {0};
+int16_t dataAcc[3];
+float filteredAcc[3] = {0}; // przefiltrowane X, Y, Z
+
+mouseHID mousehid = {0,0,0,0};
+
+>>>>>>> Stashed changes
 /* USER CODE END 0 */
 
 /**
@@ -148,8 +169,16 @@ int main(void)
           printf("Błąd! Otrzymano: 0x%X, spodziewano się: 0x%X\n", sensor_id, WHO_AM_I_EXPECTED);
       }
 
+<<<<<<< Updated upstream
       uint8_t gyro_id = readGyroWhoAmI();
       printf("Żyroskop WHO_AM_I: 0x%X (spodziewano się 0xD4)\n", gyro_id);
+=======
+  printf(" - - Start programu - - \r\n");
+
+  if(!gyroInit()){Error_Handler();}
+  if(!accInit()){Error_Handler();}
+
+>>>>>>> Stashed changes
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -159,6 +188,15 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+<<<<<<< Updated upstream
+=======
+	  gyroGetData(filteredGyro);
+	  accGetData(filteredAcc);
+	  AccToMouse_Process(mousehid,filteredAcc);
+
+	  HAL_Delay(20);
+
+>>>>>>> Stashed changes
   }
   /* USER CODE END 3 */
 }
@@ -240,6 +278,8 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
+	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
+	HAL_Delay(500);
 
   /* USER CODE END Error_Handler_Debug */
 }

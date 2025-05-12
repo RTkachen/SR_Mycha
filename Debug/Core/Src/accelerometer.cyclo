@@ -1,0 +1,2 @@
+../Core/Src/accelerometer.c:5:9:accInit	3
+../Core/Src/accelerometer.c:20:6:accGetData	2

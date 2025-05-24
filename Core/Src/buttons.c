@@ -11,6 +11,15 @@ static uint8_t  lastRawState = 0;      // surowy odczyt z ostatniego wezwania
 static uint32_t lastChangeTick = 0;    // HAL_GetTick() czasu ostatniej zmiany
 static uint8_t  stableState = 0;       // oddebouncowany stan
 
+
+/**
+ * buttons_init
+ * -------------
+ * Inicjalizuje wewnętrzne zmienne modułu przycisków:
+ *   - zeruje debouncowane i surowe stany,
+ *   - ustawiane jest początkowe tick (stąd debouncowanie już od startu).
+ * GPIO jest skonfigurowane przez CubeMX, więc tutaj tylko reset stanu.
+ */
 void buttons_init(void)
 {
     lastRawState    = 0;
@@ -18,6 +27,20 @@ void buttons_init(void)
     lastChangeTick  = HAL_GetTick();
 }
 
+
+/**
+ * buttons_getState
+ * -----------------
+ * Odczytuje surowy stan przycisków (PA1/PA2), debouncuje go czasowo
+ * i zwraca jako maskę bitową:
+ *   bit0 = prawy przycisk, bit1 = lewy przycisk.
+ * Mechanizm:
+ *   1) Odczyt raw = aktualny stan GPIO,
+ *   2) Jeśli raw zmienił się od ostatniego odczytu, reset timera,
+ *   3) Jeśli przez DEBOUNCE_DELAY ms raw pozostaje niezmieniony,
+ *      to aktualizowany jest stableState,
+ *   4) Zwracany jest stableState.
+ */
 uint8_t buttons_getState(void)
 {
     // 1) Odczyt surowy: 1 = wciśnięty, 0 = puszczony

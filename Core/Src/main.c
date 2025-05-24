@@ -28,7 +28,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
-
+#include "buttons.h"
 #include "accelerometer.h"
 #include "gyroscope.h"
 #include "usbhid.h"

@@ -45,7 +45,7 @@ void AccToMouse_Process(mouseHID mousehid, int16_t accFilt[3])
     }
 
     // Przygotowanie raportu i wysyłka
-    mousehid.buttons = 0;
+    mousehid.buttons = buttons_getState();
     mousehid.mouse_x = mx;
     mousehid.mouse_y = my;
     mousehid.wheel   = 0;

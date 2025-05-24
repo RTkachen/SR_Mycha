@@ -1,7 +1,19 @@
 #include "usbhid.h"
 
 extern USBD_HandleTypeDef hUsbDeviceFS;
-
+/**
+ * AccToMouse_Process
+ * -------------------
+ * Przekształca przefiltrowane wychylenia z akcelerometru (accFilt[0]=X, accFilt[1]=Y)
+ * w raport HID myszy:
+ * 1) porównuje dx, dy z progiem MOUSE_THRESHOLD,
+ * 2) przelicza nadwyżkę ponad próg na krok w pikselach: (|dx|-thr)/1000 + MOUSE_STEP_MIN,
+ * 3) ogranicza krok do ±MOUSE_STEP_MAX,
+ * 4) ustawia pola mouse_x, mouse_y i wysyła raport USB.
+ * Parametry:
+ *   mousehid – struktura do wypełnienia i wysłania,
+ *   accFilt  – tablica int16_t[3] z wycentrowanymi, przefiltrowanymi wartościami.
+ */
 void AccToMouse_Process(mouseHID mousehid, int16_t accFilt[3])
 {
     // accFilt jest już skalibrowane (offset usunięty) i przefiltrowane

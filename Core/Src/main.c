@@ -19,7 +19,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "i2c.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
@@ -71,8 +70,8 @@ int _write(int file, char *ptr, int len) {
 }
 
 float filteredGyro[3] = {0};
-float filteredAcc[3] = {0}; // przefiltrowane X, Y, Z
-
+int16_t filteredAcc[3] = {0};
+int16_t offset[3];
 mouseHID mousehid = {0,0,0,0};
 
 /* USER CODE END 0 */
@@ -105,18 +104,16 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_I2C1_Init();
   MX_SPI2_Init();
   MX_USART2_UART_Init();
   MX_TIM6_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
 
-  printf(" - - Start programu - - \r\n");
-
   if(!gyroInit()){Error_Handler();}
   if(!accInit()){Error_Handler();}
 
+  accel_calibrate(offset, 100);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -126,7 +123,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  gyroGetData(filteredGyro);
+	 // gyroGetData(filteredGyro);
 	  accGetData(filteredAcc);
 	  AccToMouse_Process(mousehid,filteredAcc);
 
@@ -146,10 +143,15 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
+  /** Configure LSE Drive Capability
+  */
+  HAL_PWR_EnableBkUpAccess();
+  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE|RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
   RCC_OscInitStruct.MSICalibrationValue = 0;
   RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
@@ -177,10 +179,8 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_I2C1
-                              |RCC_PERIPHCLK_USB;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_USB;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
-  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
   PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_PLLSAI1;
   PeriphClkInit.PLLSAI1.PLLSAI1Source = RCC_PLLSOURCE_MSI;
   PeriphClkInit.PLLSAI1.PLLSAI1M = 1;
@@ -199,6 +199,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+  /** Enable MSI Auto calibration
+  */
+  HAL_RCCEx_EnableMSIPLLMode();
 }
 
 /* USER CODE BEGIN 4 */

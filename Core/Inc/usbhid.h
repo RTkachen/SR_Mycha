@@ -15,7 +15,7 @@ typedef struct
 	int8_t wheel;
 } mouseHID;
 
-void AccToMouse_Process(mouseHID mousehid,float filteredAcc[3]);
+void AccToMouse_Process(mouseHID mousehid,int16_t filteredAcc[3]);
 
 #ifdef __cplusplus
 }

@@ -106,10 +106,6 @@ void Error_Handler(void);
 #define GYRO_CS_GPIO_Port GPIOD
 #define M3V3_REG_ON_Pin GPIO_PIN_3
 #define M3V3_REG_ON_GPIO_Port GPIOB
-#define I2C1_SCL_Pin GPIO_PIN_6
-#define I2C1_SCL_GPIO_Port GPIOB
-#define I2C1_SDA_Pin GPIO_PIN_7
-#define I2C1_SDA_GPIO_Port GPIOB
 #define GYRO_INT2_Pin GPIO_PIN_8
 #define GYRO_INT2_GPIO_Port GPIOB
 #define XL_CS_Pin GPIO_PIN_0

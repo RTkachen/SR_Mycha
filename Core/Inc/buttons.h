@@ -11,8 +11,8 @@ void buttons_init(void);
  * Debounce’owany odczyt wszystkich przycisków.
  * @return maska: bit0 = lewy (PA1), bit1 = prawy (PA2)
  */
-uint8_t buttons_getState(void);
+uint8_t buttons_getState();
 
-uint8_t buttons_changeDPI(uint8_t DPI_state);
+int8_t buttons_changeDPI(int8_t* DPI_state);
 
 #endif /* INC_BUTTONS_H_ */

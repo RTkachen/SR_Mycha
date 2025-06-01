@@ -3,31 +3,8 @@
 
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
-void setDPI(mouseHID mousehid, int8_t min, int8_t max){
-	mousehid.step_min = min;
-	mousehid.step_min = max;
-}
+void changeDPI(mouseHID mousehid, int8_t DPI_level){
 
-void changeDPI(mouseHID mousehid, uint8_t DPI_level){
-	switch(DPI_level){
-	case 1:
-		setDPI(mousehid,1,20);
-		break;
-	case 2:
-		setDPI(mousehid,1,40);
-		break;
-	case 3:
-		setDPI(mousehid,1,60);
-		break;
-	case 4:
-		setDPI(mousehid,1,80);
-		break;
-	case 5:
-		setDPI(mousehid,1,100);
-		break;
-	default:
-		break;
-	}
 }
 
 /**
@@ -43,7 +20,7 @@ void changeDPI(mouseHID mousehid, uint8_t DPI_level){
  *   mousehid – struktura do wypełnienia i wysłania,
  *   accFilt  – tablica int16_t[3] z wycentrowanymi, przefiltrowanymi wartościami.
  */
-void AccToMouse_Process(mouseHID mousehid, int16_t accFilt[3], uint8_t DPI_level)
+void AccToMouse_Process(mouseHID mousehid, int16_t accFilt[3], int8_t* dpi)
 {
     // accFilt jest już skalibrowane (offset usunięty) i przefiltrowane
     int16_t dx = accFilt[0];
@@ -51,33 +28,36 @@ void AccToMouse_Process(mouseHID mousehid, int16_t accFilt[3], uint8_t DPI_level
     int8_t  mx = 0;
     int8_t  my = 0;
 
-    int16_t MOUSE_THRESHOLD = 2000;   // próg detekcji
+    // Zmiana dpi
+    *dpi = buttons_changeDPI(dpi);
 
-    DPI_level = buttons_changeDPI(DPI_level);
-    changeDPI(mousehid,DPI_level);
+    int16_t MOUSE_THRESHOLD = 2000;   // próg detekcji
+    int8_t  MOUSE_STEP_MIN  = 1;      // minimalny krok
+    int8_t  MOUSE_STEP_MAX  = 20;     // maksymalny krok
 
     // Oś X
     if (dx < -MOUSE_THRESHOLD) {
-        mx = (int8_t)(((-dx - MOUSE_THRESHOLD) / 1000) + mousehid.step_min);
-        if (mx > mousehid.step_max) mx = mousehid.step_max;
+        mx = (int8_t)(((-dx - MOUSE_THRESHOLD) / 1000) + MOUSE_STEP_MIN);
+        if (mx > MOUSE_STEP_MAX) mx = MOUSE_STEP_MAX;
     } else if (dx > MOUSE_THRESHOLD) {
-        mx = -(int8_t)(((dx - MOUSE_THRESHOLD) / 1000) + mousehid.step_min);
-        if (mx < -mousehid.step_max) mx = -mousehid.step_max;
+        mx = -(int8_t)(((dx - MOUSE_THRESHOLD) / 1000) + MOUSE_STEP_MIN);
+        if (mx < -MOUSE_STEP_MAX) mx = -MOUSE_STEP_MAX;
     }
 
     // Oś Y (inwersja dla kursora)
     if (dy > MOUSE_THRESHOLD) {
-        my = -(int8_t)(((dy - MOUSE_THRESHOLD) / 1000) + mousehid.step_min);
-        if (my < -mousehid.step_max) my = -mousehid.step_max;
+        my = -(int8_t)(((dy - MOUSE_THRESHOLD) / 1000) + MOUSE_STEP_MIN);
+        if (my < -MOUSE_STEP_MAX) my = -MOUSE_STEP_MAX;
     } else if (dy < -MOUSE_THRESHOLD) {
-        my = (int8_t)(((-dy - MOUSE_THRESHOLD) / 1000) + mousehid.step_min);
-        if (my > mousehid.step_max) my = mousehid.step_max;
+        my = (int8_t)(((-dy - MOUSE_THRESHOLD) / 1000) + MOUSE_STEP_MIN);
+        if (my > MOUSE_STEP_MAX) my = MOUSE_STEP_MAX;
     }
+
 
     // Przygotowanie raportu i wysyłka
     mousehid.buttons = buttons_getState();
-    mousehid.mouse_x = mx;
-    mousehid.mouse_y = my;
+    mousehid.mouse_x = mx * *dpi;
+    mousehid.mouse_y = my * *dpi;
     mousehid.wheel   = 0;
     USBD_HID_SendReport(&hUsbDeviceFS,
                         (uint8_t*)&mousehid,

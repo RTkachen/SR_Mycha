@@ -43,7 +43,7 @@ void buttons_init(void)
  *      to aktualizowany jest stableState,
  *   4) Zwracany jest stableState.
  */
-uint8_t buttons_getState(void)
+uint8_t buttons_getState()
 {
     // 1) Odczyt surowy: 1 = wciśnięty, 0 = puszczony
     uint8_t raw = 0;
@@ -64,7 +64,7 @@ uint8_t buttons_getState(void)
     return stableState;
 }
 
-uint8_t buttons_changeDPI(uint8_t DPI_state)
+int8_t buttons_changeDPI(int8_t* DPI_state)
 {
     static uint32_t lastUpPressTime = 0;
     static uint32_t lastDownPressTime = 0;
@@ -78,26 +78,24 @@ uint8_t buttons_changeDPI(uint8_t DPI_state)
     uint8_t currentUpState = HAL_GPIO_ReadPin(BTN_GPIO_PORT, BTN_UP_PIN);
     uint8_t currentDownState = HAL_GPIO_ReadPin(BTN_GPIO_PORT, BTN_DOWN_PIN);
 
-    // Obsługa przycisku "plus"
+    // Obsługa przycisku zwiekszającego DPI (joystick up)
     if (prevUpState == 1 && currentUpState == 0) // zbocze opadające
     {
         if ((currentTime - lastUpPressTime) > DEBOUNCE_DELAY)
         {
-        	DPI_state++;
-        	printf("DPI up\n");
-        	if(DPI_state>5) DPI_state = 5;
+        	(*DPI_state)++;
+        	if(*DPI_state>5) *DPI_state = 5;	//jesli przekroczono zakres 1-5
             lastUpPressTime = currentTime;
         }
     }
 
-    // Obsługa przycisku "minus"
+    // Obsługa przycisku zmniejszającego DPI (joystick down)
     if (prevDownState == 1 && currentDownState == 0) // zbocze opadające
     {
         if ((currentTime - lastDownPressTime) > DEBOUNCE_DELAY)
         {
-        	DPI_state--;
-        	printf("DPI down\n");
-        	if(DPI_state<1) DPI_state = 1;
+        	(*DPI_state)--;
+        	if(*DPI_state<1) *DPI_state = 1;	//jesli przekroczono zakres 1-5
             lastDownPressTime = currentTime;
         }
     }
@@ -105,6 +103,8 @@ uint8_t buttons_changeDPI(uint8_t DPI_state)
     // Aktualizacja poprzednich stanów
     prevUpState = currentUpState;
     prevDownState = currentDownState;
+
+    return *DPI_state;
 }
 
 

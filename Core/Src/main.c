@@ -53,27 +53,27 @@
 
 /* USER CODE BEGIN PV */
 
+float filteredGyro[3] = {0};
+int16_t filteredAcc[3] = {0};
+int16_t offset[3];
+mouseHID mousehid = {0,0,0,0};
+int8_t dpi = 1;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-
 int _write(int file, char *ptr, int len) {
     HAL_UART_Transmit(&huart2, (uint8_t*) ptr, len, 100);
     return len;
 }
 
-float filteredGyro[3] = {0};
-int16_t filteredAcc[3] = {0};
-int16_t offset[3];
-mouseHID mousehid = {0,0,0,0,1,20};
-uint8_t DPI_level = 3;
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
 
@@ -126,10 +126,10 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	 // gyroGetData(filteredGyro);
 	  accGetData(filteredAcc);
-	  AccToMouse_Process(mousehid,filteredAcc,DPI_level);
+	  AccToMouse_Process(mousehid,filteredAcc,&dpi);
 
-	  if(DPI_level != 3)
-	  printf("DPI: %d\n",DPI_level);
+//	  if(DPI_level != 3)
+	  printf("DPI: %d\n",dpi);
 
 	  HAL_Delay(20);
 

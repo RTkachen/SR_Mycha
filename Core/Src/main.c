@@ -72,7 +72,8 @@ int _write(int file, char *ptr, int len) {
 float filteredGyro[3] = {0};
 int16_t filteredAcc[3] = {0};
 int16_t offset[3];
-mouseHID mousehid = {0,0,0,0};
+mouseHID mousehid = {0,0,0,0,1,20};
+uint8_t DPI_level = 3;
 
 /* USER CODE END 0 */
 
@@ -125,7 +126,10 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	 // gyroGetData(filteredGyro);
 	  accGetData(filteredAcc);
-	  AccToMouse_Process(mousehid,filteredAcc);
+	  AccToMouse_Process(mousehid,filteredAcc,DPI_level);
+
+	  if(DPI_level != 3)
+	  printf("DPI: %d\n",DPI_level);
 
 	  HAL_Delay(20);
 

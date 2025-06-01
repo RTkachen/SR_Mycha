@@ -1,8 +1,10 @@
 #include "buttons.h"
 // GPIO piny z CubeMX: PA1 (left), PA2 (right)
-#define BTN_LEFT_PIN   GPIO_PIN_1
-#define BTN_RIGHT_PIN  GPIO_PIN_2
-#define BTN_GPIO_PORT  GPIOA
+#define BTN_LEFT_PIN   	GPIO_PIN_1
+#define BTN_RIGHT_PIN  	GPIO_PIN_2
+#define BTN_UP_PIN	   	GPIO_PIN_3
+#define BTN_DOWN_PIN	GPIO_PIN_5
+#define BTN_GPIO_PORT  	GPIOA
 
 // czas debounca w ms
 #define DEBOUNCE_DELAY 50
@@ -61,3 +63,74 @@ uint8_t buttons_getState(void)
     // 4) Zwracamy oddebouncowany stan (bit-maskę)
     return stableState;
 }
+
+uint8_t buttons_changeDPI(uint8_t DPI_state)
+{
+    static uint32_t lastUpPressTime = 0;
+    static uint32_t lastDownPressTime = 0;
+
+    static uint8_t prevUpState = 1;
+    static uint8_t prevDownState = 1;
+
+    uint32_t currentTime = HAL_GetTick();
+
+    // Czytanie obecnych stanów przycisków
+    uint8_t currentUpState = HAL_GPIO_ReadPin(BTN_GPIO_PORT, BTN_UP_PIN);
+    uint8_t currentDownState = HAL_GPIO_ReadPin(BTN_GPIO_PORT, BTN_DOWN_PIN);
+
+    // Obsługa przycisku "plus"
+    if (prevUpState == 1 && currentUpState == 0) // zbocze opadające
+    {
+        if ((currentTime - lastUpPressTime) > DEBOUNCE_DELAY)
+        {
+        	DPI_state++;
+        	printf("DPI up\n");
+        	if(DPI_state>5) DPI_state = 5;
+            lastUpPressTime = currentTime;
+        }
+    }
+
+    // Obsługa przycisku "minus"
+    if (prevDownState == 1 && currentDownState == 0) // zbocze opadające
+    {
+        if ((currentTime - lastDownPressTime) > DEBOUNCE_DELAY)
+        {
+        	DPI_state--;
+        	printf("DPI down\n");
+        	if(DPI_state<1) DPI_state = 1;
+            lastDownPressTime = currentTime;
+        }
+    }
+
+    // Aktualizacja poprzednich stanów
+    prevUpState = currentUpState;
+    prevDownState = currentDownState;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

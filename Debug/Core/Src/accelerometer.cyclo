@@ -1,0 +1,4 @@
+../Core/Src/accelerometer.c:15:9:accInit	3
+../Core/Src/accelerometer.c:40:6:accel_calibrate	2
+../Core/Src/accelerometer.c:71:9:accel_lpf_int	1
+../Core/Src/accelerometer.c:85:6:accGetData	2

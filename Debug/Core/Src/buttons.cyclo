@@ -1,0 +1,3 @@
+../Core/Src/buttons.c:25:6:buttons_init	1
+../Core/Src/buttons.c:46:9:buttons_getState	5
+../Core/Src/buttons.c:67:9:buttons_changeDPI	9

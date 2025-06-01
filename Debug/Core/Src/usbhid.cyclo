@@ -1,0 +1,3 @@
+../Core/Src/usbhid.c:6:6:setDPI	1
+../Core/Src/usbhid.c:11:6:changeDPI	6
+../Core/Src/usbhid.c:46:6:AccToMouse_Process	9

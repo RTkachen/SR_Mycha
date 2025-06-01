@@ -13,9 +13,23 @@ typedef struct
 	int8_t mouse_x;
 	int8_t mouse_y;
 	int8_t wheel;
+	int8_t step_min;
+	int8_t step_max;
 } mouseHID;
 
-void AccToMouse_Process(mouseHID mousehid,int16_t filteredAcc[3]);
+//enum DPI_enum{
+//	very_slow,
+//	slow,
+//	medium,
+//	fast,
+//	very_fast,
+//};
+
+void AccToMouse_Process(mouseHID mousehid,int16_t filteredAcc[3], uint8_t DPI_level);
+
+void setDPI(mouseHID mousehid, int8_t min, int8_t max);
+
+void changeDPI(mouseHID mousehid, uint8_t DPI_level);
 
 #ifdef __cplusplus
 }

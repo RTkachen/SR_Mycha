@@ -53,7 +53,7 @@
 
 /* USER CODE BEGIN PV */
 
-float filteredGyro[3] = {0};
+//float filteredGyro[3] = {0};
 int16_t filteredAcc[3] = {0};
 int16_t offset[3];
 mouseHID mousehid = {0,0,0,0};
@@ -111,10 +111,11 @@ int main(void)
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
 
-  if(!gyroInit()){Error_Handler();}
-  if(!accInit()){Error_Handler();}
+//  if(!gyroInit()){Error_Handler();}
 
+  if(!accInit()){Error_Handler();}
   accel_calibrate(offset, 100);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -129,7 +130,7 @@ int main(void)
 	  AccToMouse_Process(mousehid,filteredAcc,&dpi);
 
 //	  if(DPI_level != 3)
-	  printf("DPI: %d\n",dpi);
+//	  printf("DPI: %d\n",dpi);
 
 	  HAL_Delay(20);
 

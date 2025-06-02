@@ -51,7 +51,6 @@ void AccToMouse_Process(mouseHID mousehid, int16_t accFilt[3], int8_t* dpi)
         if (my > MOUSE_STEP_MAX) my = MOUSE_STEP_MAX;
     }
 
-
     // Przygotowanie raportu i wysyłka
     mousehid.buttons = buttons_getState();
     mousehid.mouse_x = mx * *dpi;

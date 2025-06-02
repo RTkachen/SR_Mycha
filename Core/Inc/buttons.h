@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "usbhid.h"
 #include "stm32l4xx_hal.h"
+
 /** Inicjalizacja tylko wewnętrznych struktur (GPIO z CubeMX). */
 void buttons_init(void);
 

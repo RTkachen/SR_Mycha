@@ -1,18 +1,16 @@
 #include "buttons.h"
-// GPIO piny z CubeMX: PA1 (left), PA2 (right)
+// GPIO piny joysticka z CubeMX: PA1 (left), PA2 (right), PA3 (up), PA5 (down)
 #define BTN_LEFT_PIN   	GPIO_PIN_1
 #define BTN_RIGHT_PIN  	GPIO_PIN_2
 #define BTN_UP_PIN	   	GPIO_PIN_3
 #define BTN_DOWN_PIN	GPIO_PIN_5
 #define BTN_GPIO_PORT  	GPIOA
 
-// czas debounca w ms
-#define DEBOUNCE_DELAY 50
+#define DEBOUNCE_DELAY 50	// czas debounca w ms
 
 static uint8_t  lastRawState = 0;      // surowy odczyt z ostatniego wezwania
 static uint32_t lastChangeTick = 0;    // HAL_GetTick() czasu ostatniej zmiany
 static uint8_t  stableState = 0;       // oddebouncowany stan
-
 
 /**
  * buttons_init
@@ -28,7 +26,6 @@ void buttons_init(void)
     stableState     = 0;
     lastChangeTick  = HAL_GetTick();
 }
-
 
 /**
  * buttons_getState
@@ -67,9 +64,9 @@ uint8_t buttons_getState()
 /**
  * buttons_changeDPI
  * -----------------
- * Odczytuje stan przycisków (PA3/PA4), debouncuje go czasowo
+ * Odczytuje stan przycisków (PA3/PA5), debouncuje go czasowo
  * i interpretuje jako zmianę wartości DPI
- *   PA3 = joystick up = DPI++, PA4 = joystick down = DPI--.
+ *   PA3 = joystick up = DPI++, PA5 = joystick down = DPI--.
  * Mechanizm:
  *   1) Odczyt curent(Up/Down)State = aktualny stan GPIO,
  *   2) Jeśli curent(Up/Down)State zmienił się od ostatniego odczytu, reset timera,
@@ -96,7 +93,7 @@ int8_t buttons_changeDPI(int8_t* DPI_state)
     {
         if ((currentTime - lastUpPressTime) > DEBOUNCE_DELAY)
         {
-        	(*DPI_state)++;
+        	++(*DPI_state);
         	if(*DPI_state>5) *DPI_state = 5;	//jesli przekroczono zakres 1-5
             lastUpPressTime = currentTime;
         }
@@ -107,7 +104,7 @@ int8_t buttons_changeDPI(int8_t* DPI_state)
     {
         if ((currentTime - lastDownPressTime) > DEBOUNCE_DELAY)
         {
-        	(*DPI_state)--;
+        	--(*DPI_state);
         	if(*DPI_state<1) *DPI_state = 1;	//jesli przekroczono zakres 1-5
             lastDownPressTime = currentTime;
         }

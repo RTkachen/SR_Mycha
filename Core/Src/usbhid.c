@@ -3,10 +3,6 @@
 
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
-void changeDPI(mouseHID mousehid, int8_t DPI_level){
-
-}
-
 /**
  * AccToMouse_Process
  * -------------------
@@ -16,9 +12,11 @@ void changeDPI(mouseHID mousehid, int8_t DPI_level){
  * 2) przelicza nadwyżkę ponad próg na krok w pikselach: (|dx|-thr)/1000 + MOUSE_STEP_MIN,
  * 3) ogranicza krok do ±MOUSE_STEP_MAX,
  * 4) ustawia pola mouse_x, mouse_y i wysyła raport USB.
+ * 5) reaguje na zmianę wartości DPI
  * Parametry:
  *   mousehid – struktura do wypełnienia i wysłania,
  *   accFilt  – tablica int16_t[3] z wycentrowanymi, przefiltrowanymi wartościami.
+ *   dpi 	  - wskaźnik do zmiennej int8_t zawierającej mnożnik DPI
  */
 void AccToMouse_Process(mouseHID mousehid, int16_t accFilt[3], int8_t* dpi)
 {

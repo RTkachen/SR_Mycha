@@ -64,6 +64,19 @@ uint8_t buttons_getState()
     return stableState;
 }
 
+/**
+ * buttons_changeDPI
+ * -----------------
+ * Odczytuje stan przycisków (PA3/PA4), debouncuje go czasowo
+ * i interpretuje jako zmianę wartości DPI
+ *   PA3 = joystick up = DPI++, PA4 = joystick down = DPI--.
+ * Mechanizm:
+ *   1) Odczyt curent(Up/Down)State = aktualny stan GPIO,
+ *   2) Jeśli curent(Up/Down)State zmienił się od ostatniego odczytu, reset timera,
+ *   3) Jeśli przez DEBOUNCE_DELAY ms curent(Up/Down)State pozostaje niezmieniony,
+ *      to aktualizowany jest DPI,
+ *   4) Zwracany jest DPI jako wartość.
+ */
 int8_t buttons_changeDPI(int8_t* DPI_state)
 {
     static uint32_t lastUpPressTime = 0;
